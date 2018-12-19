@@ -31,5 +31,6 @@ dependencies {
     implementation 'com.pitt.fresh.library:freshdownloadview:1.0'
     implementation 'com.zhy:okhttputils:2.6.2'
     testImplementation 'junit:junit:4.12'
-    implementation project(':upgradelib')
+//    implementation project(':upgradelib')
+    implementation 'com.cherry.upgrade:VersionUpgrade:1.0.0'
 }
