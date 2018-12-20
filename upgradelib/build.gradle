@@ -33,7 +33,7 @@ publish {
     repoName = 'public'
     groupId = 'com.cherry.upgrade'  //compile引用时的第1部分groupId
     artifactId = 'VersionUpgrade'// bintray创建的package
-    publishVersion = '1.0.0'  //compile引用时的第3部分版本号
+    publishVersion = '1.1.0'  //compile引用时的第3部分版本号
     desc = 'This is verion upgrade library'
 }
 
