@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Environment
 import com.cherry.upgrade.download.BuilderHelper
 import com.cherry.upgrade.download.DownloadService
-import com.cherry.upgrade.ui.IShowUpgradeUI
+import com.cherry.upgrade.ui.AbstractUpgradeUI
 import com.cherry.upgrade.ui.IUserOptionCallback
 import com.cherry.upgrade.util.*
 import java.io.File
@@ -14,7 +14,7 @@ import java.io.File
  * @since 18-12-11
  */
 
-object CheckManager {
+internal object CheckManager {
 
     private var checker: IChecker? = null
 
@@ -27,42 +27,54 @@ object CheckManager {
             }
         }
         checker.check(builder) { it ->
-            handle(builder.ui, it)
+            handle(builder, it)
         }
     }
 
-    private fun handle(ui: IShowUpgradeUI, response: CheckResponse) {
-        val uiCallback = ui.uiCallback
+    private fun handle(builder: CheckerBuilder, response: CheckResponse) {
+        val ui = builder.ui
         if (response.hasNewVersion) {
+            ui.createUpgradeUI(response.forceUpgrade)
+            //其他处理
+            ui.checkResult(response.originResponse)
+
+            //强制更新默认不显示更新的UI,直接下载更新
             if (response.forceUpgrade) {
-                uiCallback.forceUpgrade(ui.context, response)
+                if (builder.forceUpgradeUI) {
+                    showUpgradeUI(ui, response)
+
+                } else {
+                    //不显示强制更新ui直接下载更新
+                    CheckManager.downloadThenInstall(ui.context, response)
+                }
             } else {
-                //推荐更新,显示更新提示
-                ui.showUpgradeUI(object : IUserOptionCallback {
-                    override fun ignoreNewVersion(context: Context) {
-                        SpUtil.saveIgnoreVersion(context)
-                        ui.hideUpgradeUI()
-                    }
-
-                    override fun cancelNewVersion() {
-                        ui.hideUpgradeUI()
-                    }
-
-                    override fun upgrade(context: Context) {
-                        downloadThenInstall(context, response)
-                    }
-                })
+                showUpgradeUI(ui, response)
             }
         } else {
             //没有新版本
-            uiCallback.noHasVersion()
+            ui.noHasVersion()
         }
-
-        //其他处理
-        uiCallback.checkResult(response.originResponse)
     }
 
-    fun downloadThenInstall(context: Context, response: CheckResponse) {
+    private fun showUpgradeUI(ui: AbstractUpgradeUI, response: CheckResponse) {
+        ui.setOnUserOptionCallback(object : IUserOptionCallback {
+            override fun ignoreNewVersion(context: Context) {
+                SpUtil.saveIgnoreVersion(context)
+                ui.hideUpgradeUI()
+            }
+
+            override fun cancelNewVersion() {
+                ui.hideUpgradeUI()
+            }
+
+            override fun upgrade(context: Context) {
+                downloadThenInstall(context, response)
+            }
+        })
+        ui.showUpgradeUI()
+    }
+
+    private fun downloadThenInstall(context: Context, response: CheckResponse) {
         BuilderHelper.downloadBuilder?.run {
             downloadUrl = response.downloadUrl ?: ""
             if (!downloadUrl.legalHttp()) {

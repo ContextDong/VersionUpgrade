@@ -8,22 +8,17 @@ import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.widget.Toast
 import com.cherry.upgrade.download.DownloadListener
-import com.cherry.upgrade.ui.*
+import com.cherry.upgrade.ui.AbstractUpgradeUI
+import com.cherry.upgrade.ui.IBeforeCheckCallback
+import com.cherry.upgrade.ui.INotification
 
 /**
  * @author 董棉生(dongmiansheng@parkingwang.com)
  * @since 18-12-11
  */
 
-class NotificationUpgradeUI(override val context: Context) : IBeforeCheckCallback, IShowUpgradeUI,
+class NotificationUpgradeUI(override val context: Context) : IBeforeCheckCallback, AbstractUpgradeUI(),
         DownloadListener, INotification {
-
-
-    override val uiCallback: IUpgradeUICallback = object : IUpgradeUICallback {
-        override fun noHasVersion() {
-            Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private val progressDialog by lazy {
         val dialog = ProgressDialog(context)
@@ -40,8 +35,43 @@ class NotificationUpgradeUI(override val context: Context) : IBeforeCheckCallbac
         Toast.makeText(context, "正在检查更新", Toast.LENGTH_SHORT).show()
     }
 
-    override fun showUpgradeUI(callback: IUserOptionCallback) {
-        upgradeDialog = createDialog(callback)
+    override fun noHasVersion() {
+        Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun checkResult(originResponse: String) {
+        //添加更新说明
+//        upgradeDialog?.setMessage(JSONObject(originResponse).getString("desc"))
+    }
+
+
+    override fun createUpgradeUI(forceUpgrade: Boolean) {
+        upgradeDialog = if (forceUpgrade) {
+            AlertDialog.Builder(context)
+                    .setTitle("强制更新")
+                    .setPositiveButton("更新") { _, _ ->
+                        callback.upgrade(context)
+                    }
+                    .setCancelable(false)
+        } else {
+            AlertDialog.Builder(context)
+                    .setTitle("更新")
+                    .setSingleChoiceItems(arrayOf("忽略更新", "取消", "确认"), -1) { _, which ->
+                        when (which) {
+                            0 -> callback.ignoreNewVersion(context)
+                            1 -> callback.cancelNewVersion()
+                            2 -> callback.upgrade(context)
+                        }
+                    }
+
+        }.create()
+
+        if (forceUpgrade) {
+            upgradeDialog?.setCanceledOnTouchOutside(false)
+        }
+    }
+
+    override fun showUpgradeUI() {
         upgradeDialog?.show()
     }
 
@@ -49,18 +79,6 @@ class NotificationUpgradeUI(override val context: Context) : IBeforeCheckCallbac
         upgradeDialog?.dismiss()
     }
 
-    private fun createDialog(callback: IUserOptionCallback): AlertDialog {
-        return AlertDialog.Builder(context)
-                .setTitle("更新")
-                .setSingleChoiceItems(arrayOf("忽略更新", "取消", "确认"), -1) { _, which ->
-                    when (which) {
-                        0 -> callback.ignoreNewVersion(context)
-                        1 -> callback.cancelNewVersion()
-                        2 -> callback.upgrade(context)
-                    }
-                }
-                .create()
-    }
 
     override fun onDownloadStart(apkFileSavePath: String) {
         progressDialog.show()

@@ -8,22 +8,17 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import com.cherry.upgrade.download.DownloadListener
-import com.cherry.upgrade.ui.*
+import com.cherry.upgrade.ui.AbstractUpgradeUI
+import com.cherry.upgrade.ui.IBeforeCheckCallback
+import com.cherry.upgrade.ui.INotification
 
 /**
  * @author 董棉生(dongmiansheng@parkingwang.com)
  * @since 18-12-11
  */
 
-class CustomUpgradeUI(override val context: Context) : IBeforeCheckCallback, IShowUpgradeUI,
+class CustomUpgradeUI(override val context: Context) : IBeforeCheckCallback, AbstractUpgradeUI(),
         DownloadListener, INotification {
-
-
-    override val uiCallback: IUpgradeUICallback = object : IUpgradeUICallback {
-        override fun noHasVersion() {
-            Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private val dialog by lazy {
         UpgradeDialog()
@@ -34,9 +29,17 @@ class CustomUpgradeUI(override val context: Context) : IBeforeCheckCallback, ISh
         Toast.makeText(context, "正在检查更新", Toast.LENGTH_SHORT).show()
     }
 
-    override fun showUpgradeUI(callback: IUserOptionCallback) {
-        dialog.setUserOptionCallback(callback)
+    override fun noHasVersion() {
+        Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun createUpgradeUI(forceUpgrade: Boolean) {
+        //nothing
+    }
+
+    override fun showUpgradeUI() {
         dialog.show((context as AppCompatActivity).supportFragmentManager, "download_dialog")
+        dialog.setUserOptionCallback(callback)
     }
 
     override fun hideUpgradeUI() {

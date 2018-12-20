@@ -2,8 +2,8 @@ package com.cherry.upgrade.checker
 
 import android.content.Context
 import com.cherry.upgrade.download.DownloadBuilder
+import com.cherry.upgrade.ui.AbstractUpgradeUI
 import com.cherry.upgrade.ui.IBeforeCheckCallback
-import com.cherry.upgrade.ui.IShowUpgradeUI
 import com.cherry.upgrade.util.AppUtil
 import com.cherry.upgrade.util.SpUtil
 import kotlin.properties.Delegates
@@ -30,10 +30,16 @@ class CheckerBuilder private constructor() {
     var onlyWifi: Boolean = false
         private set
 
+    /**
+     * 强制更新时显示UI
+     */
+    var forceUpgradeUI: Boolean = true
+        private set
+
     var checker: IChecker = DefaultCheckerEngine
         private set
 
-    var ui: IShowUpgradeUI by Delegates.notNull()
+    var ui: AbstractUpgradeUI by Delegates.notNull()
         private set
 
     var listener: ICheckerCallback by Delegates.notNull()
@@ -58,7 +64,7 @@ class CheckerBuilder private constructor() {
         return !SpUtil.isNeedIgnore(context) && if (onlyWifi) AppUtil.isWifi(context) else true
     }
 
-    fun showUI(ui: IShowUpgradeUI): DownloadBuilder.Builder {
+    fun showUI(ui: AbstractUpgradeUI): DownloadBuilder.Builder {
         this.ui = ui
         return DownloadBuilder.Builder()
     }
@@ -97,6 +103,11 @@ class CheckerBuilder private constructor() {
 
         fun onlyWifi(onlyWifi: Boolean): Builder {
             builder.onlyWifi = onlyWifi
+            return this
+        }
+
+        fun forceUpgradeUI(forceUpgradeUI: Boolean): Builder {
+            builder.forceUpgradeUI = forceUpgradeUI
             return this
         }
 

@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity() {
                 .setUrl("http://www.wanandroid.com/tools/mockapi/5686/upgrade")
                 .setRequestMethod(HttpRequestMethod.GET)
                 .setRequestParams(hashMapOf())
+                .forceUpgradeUI(false)//不显示强制更新UI
                 .build()
                 .beforeCheck(this, upgradeUI)
                 .request(this, object : ICheckerCallback {

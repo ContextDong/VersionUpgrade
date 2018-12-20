@@ -7,13 +7,20 @@ import android.content.Context
  * @since 18-12-11
  */
 
-interface IShowUpgradeUI {
+internal interface IShowUpgradeUI {
 
     val context: Context
 
-    val uiCallback: IUpgradeUICallback
+    fun noHasVersion(){}
 
-    fun showUpgradeUI(callback: IUserOptionCallback)
+    /**
+     * 其他处理
+     */
+    fun checkResult(originResponse: String) {}
+
+    fun createUpgradeUI(forceUpgrade: Boolean)
+
+    fun showUpgradeUI()
 
     fun hideUpgradeUI()
 

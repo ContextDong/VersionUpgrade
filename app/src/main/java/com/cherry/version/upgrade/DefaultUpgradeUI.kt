@@ -6,23 +6,16 @@ import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.widget.Toast
 import com.cherry.upgrade.download.DownloadListener
+import com.cherry.upgrade.ui.AbstractUpgradeUI
 import com.cherry.upgrade.ui.IBeforeCheckCallback
-import com.cherry.upgrade.ui.IShowUpgradeUI
-import com.cherry.upgrade.ui.IUpgradeUICallback
-import com.cherry.upgrade.ui.IUserOptionCallback
 
 /**
  * @author 董棉生(dongmiansheng@parkingwang.com)
  * @since 18-12-11
  */
 
-class DefaultUpgradeUI(override val context: Context) : IBeforeCheckCallback, IShowUpgradeUI, DownloadListener {
+class DefaultUpgradeUI(override val context: Context) : IBeforeCheckCallback, AbstractUpgradeUI(), DownloadListener {
 
-    override val uiCallback: IUpgradeUICallback = object : IUpgradeUICallback {
-        override fun noHasVersion() {
-            Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private val progressDialog by lazy {
         val dialog = ProgressDialog(context)
@@ -39,17 +32,12 @@ class DefaultUpgradeUI(override val context: Context) : IBeforeCheckCallback, IS
         Toast.makeText(context, "正在检查更新", Toast.LENGTH_SHORT).show()
     }
 
-    override fun showUpgradeUI(callback: IUserOptionCallback) {
-        upgradeDialog = createDialog(callback)
-        upgradeDialog?.show()
+    override fun noHasVersion() {
+        Toast.makeText(context, "没有新版本了", Toast.LENGTH_SHORT).show()
     }
 
-    override fun hideUpgradeUI() {
-        upgradeDialog?.dismiss()
-    }
-
-    private fun createDialog(callback: IUserOptionCallback): AlertDialog {
-        return AlertDialog.Builder(context)
+    override fun createUpgradeUI(forceUpgrade: Boolean) {
+        upgradeDialog = AlertDialog.Builder(context)
                 .setTitle("更新")
                 .setSingleChoiceItems(arrayOf("忽略更新", "取消", "确认"), -1) { _, which ->
                     when (which) {
@@ -63,6 +51,14 @@ class DefaultUpgradeUI(override val context: Context) : IBeforeCheckCallback, IS
                     }
                 }
                 .create()
+    }
+
+    override fun showUpgradeUI() {
+        upgradeDialog?.show()
+    }
+
+    override fun hideUpgradeUI() {
+        upgradeDialog?.dismiss()
     }
 
     override fun onDownloadStart(apkFileSavePath: String) {
